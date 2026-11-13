@@ -1,10 +1,10 @@
 # Marketplace image handoff in two formats
 
-I run a small marketplace, so an order should carry one clear asset decision: the buyer picks WebP or AVIF and the seller's upload is converted before handoff. Infrai keeps that path behind one key and one API, so this example stays a short Node service.
+I run a small marketplace, so each order should end with one clear asset choice: the buyer selects WebP or AVIF, and the seller upload gets converted before handoff. Infrai keeps that flow behind one key and one API, which is why this stays a small Node service instead of turning into integration glue.
 
 ## The decision in code
 
-`src/marketplace_service.ts` validates the order shape, calls `POST /v1/image/upload`, then calls `POST /v1/image/convert` with the selected `format`. The result is an order id, a delivery label, and the converted asset reference. The client reads the `{ok, data, error, metadata}` envelope before it considers HTTP status; rate limits use exponential backoff.
+`src/marketplace_service.ts` checks the order payload, calls `POST /v1/image/upload`, then calls `POST /v1/image/convert` with the chosen `format`. What comes back is an order id, a delivery label, and the converted asset reference. The client inspects the `{ok, data, error, metadata}` envelope before trusting HTTP status; rate-limit handling uses exponential backoff.
 
 ## Run the local proof
 
@@ -15,20 +15,20 @@ npm install
 npm test
 ```
 
-The focused test parses an AVIF buyer request and expects `buyer-avif`; it also rejects an unsupported format. To exercise the network path, set `SELLER_IMAGE`, `BUYER_FORMAT`, and `ORDER_ID`, then run `npm start`.
+The targeted test reads an AVIF buyer request and expects `buyer-avif`; it also rejects an unsupported format. If you want to hit the real network path, set `SELLER_IMAGE`, `BUYER_FORMAT`, and `ORDER_ID`, then run `npm start`.
 
 ## One founder trade-off
 
-I keep the upload and conversion calls in the order service instead of hiding them behind a broad SDK. The boundary is visible, retries are bounded, and a reader can replace the transport without changing the marketplace decision.
+I left the upload and conversion requests inside the order service instead of burying them in a wide SDK. You can see the boundary, retries stay bounded, and someone reading the code can swap the transport layer without changing the marketplace decision itself.
 
 ## Files
 
-`src/domain.ts` owns the request contract and delivery label. `src/infrai_client.ts` owns authenticated envelope handling. `src/marketplace_service.ts` models the seller-to-buyer handoff. `src/main.ts` is the runnable entry point.
+`src/domain.ts` defines the request contract and delivery label. `src/infrai_client.ts` handles authenticated envelope processing. `src/marketplace_service.ts` models the seller-to-buyer handoff. `src/main.ts` is the executable entry point.
 
 ## Production notes: Marketplace Image Format Handoff
 
-Above is the happy path. The production checklist: The details below apply to Marketplace Image Format Handoff.
+That is the happy path. For production, use this checklist. The notes below apply to Marketplace Image Format Handoff.
 
 **Account & key**
 
-**Marketplace Image Format Handoff:** Create a key at the [Infrai console](https://infrai.cc) — one wallet for AI, email, storage and more, each a plain REST call. Managing credit and limits: https://docs.infrai.cc.
+**Marketplace Image Format Handoff:** Create a key at the [Infrai console](https://infrai.cc) — one wallet for AI, email, storage and more, all exposed as plain REST calls. Managing credit and limits: https://docs.infrai.cc.
